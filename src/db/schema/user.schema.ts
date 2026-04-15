@@ -1,15 +1,17 @@
+import { relations } from 'drizzle-orm';
 import { text } from 'drizzle-orm/pg-core';
 import { pgTable, uuid, pgEnum } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
-
-const roleEnum = pgEnum('role_enum', ['USER', 'ADMIN']);
-const accountTypeEnum = pgEnum('account_type_enum', [
+import { cv } from './cv.schema';
+import { ats } from './ats.schema';
+export const roleEnum = pgEnum('role_enum', ['USER', 'ADMIN']);
+export const accountTypeEnum = pgEnum('account_type_enum', [
   'EMPLOYER',
   'JOB_SEEKER',
   'FRESHER',
 ]);
 
-const users = pgTable('users', {
+export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   username: text('username').notNull(),
   email: text('email').unique().notNull(),
@@ -26,3 +28,7 @@ const users = pgTable('users', {
 });
 
 export const insertUserSchema = createInsertSchema(users);
+export const usersRelations = relations(users, ({ many }) => ({
+  cvs: many(cv),
+  ats: many(ats),
+}));
