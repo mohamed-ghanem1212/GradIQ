@@ -15,6 +15,20 @@
       "when": 1776353715454,
       "tag": "0001_mushy_maggott",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776604864973,
+      "tag": "0002_mixed_speed",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776607396733,
+      "tag": "0003_closed_the_professor",
+      "breakpoints": true
     }
   ]
 }

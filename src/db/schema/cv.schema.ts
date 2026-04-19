@@ -1,4 +1,4 @@
-import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './user.schema';
 import { pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
@@ -15,6 +15,8 @@ export const cv = pgTable('cv', {
   summary: text('summary').notNull(),
   note: text('note').notNull(),
   format: formatEnum('format').default('PDF').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 export const cvRelations = relations(cv, ({ one, many }) => ({

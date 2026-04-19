@@ -1,4 +1,4 @@
-import { text, uuid } from 'drizzle-orm/pg-core';
+import { text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { pgTable } from 'drizzle-orm/pg-core';
 import { cv } from './cv.schema';
 import { relations } from 'drizzle-orm';
@@ -13,6 +13,8 @@ export const ats = pgTable('ats', {
   cv_id: uuid('cv_id')
     .notNull()
     .references(() => cv.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 export const atsRelations = relations(ats, ({ one }) => ({
