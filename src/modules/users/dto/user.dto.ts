@@ -1,7 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
-import type { AccountType, Role } from '../interface/user.interface';
-import { accountTypeEnum, roleEnum } from '@db/schema/user.schema';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
+import { AccountType, Role } from '../interface/user.interface';
+import { accountTypeEnum, roleEnum } from '../../../db/schema/user.schema';
 export class CreateUserDto {
   @ApiProperty()
   @IsString()
@@ -20,13 +27,17 @@ export class CreateUserDto {
   @ApiProperty()
   @IsString()
   @MinLength(4)
+  @IsOptional()
   confirmPassword: string;
-
-  @ApiProperty({ enum: roleEnum })
-  @IsEnum(roleEnum)
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  pfp: string;
+  @ApiProperty({ enum: Role })
+  @IsEnum(Role)
   role: Role;
-  @ApiProperty(accountTypeEnum)
-  @IsEnum(accountTypeEnum)
+  @ApiProperty({ enum: AccountType })
+  @IsEnum(AccountType)
   accountType: AccountType;
 
   @ApiProperty()
@@ -39,6 +50,9 @@ export class CreateUserDto {
 
   @ApiProperty()
   @IsString()
+  @Matches(/^\+?[0-9\s\-\(\)]{7,20}$/, {
+    message: 'Phone number is invalid',
+  })
   phone: string;
 
   @ApiProperty()

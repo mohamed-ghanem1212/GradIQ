@@ -13,4 +13,7 @@ export const envValidationSchema = Joi.object({
   DB_PASSWORD: Joi.string().default('password'),
   DB_NAME: Joi.string().default('grad_iq'),
   REDIS_URL: Joi.string().optional(),
+  GITHUB_CLIENT_ID: Joi.string().required(),
+  GITHUB_CLIENT_SECRET: Joi.string().required(),
+  GITHUB_CALLBACK_URL: Joi.string().required(),
 });

@@ -19,4 +19,9 @@ export const config = {
     secret: process.env.JWT_SECRET as string,
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
+  github: {
+    clientId: process.env.GITHUB_CLIENT_ID as string,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+    callbackurl: process.env.GITHUB_CALLBACK_URL as string,
+  },
 } as const;

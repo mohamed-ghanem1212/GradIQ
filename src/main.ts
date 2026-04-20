@@ -7,6 +7,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // app.setGlobalPrefix('api/v1');
   const config = new DocumentBuilder()
     .setTitle('GradIQ API')
     .setDescription(
@@ -23,6 +24,7 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .addTag('Users')
+
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, documentFactory);

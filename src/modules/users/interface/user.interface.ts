@@ -1,16 +1,14 @@
-export interface User {
-  id?: string;
-  username: string;
-  email: string;
-  password: string;
-  pfp: string;
-  role: Role;
-  accountType: AccountType;
-  position: string;
-  college: string;
-  phone: string;
-  address: string;
-}
+import { users } from '@db/schema/user.schema';
+import { InferSelectModel } from 'drizzle-orm';
 
-export type Role = 'USER' | 'ADMIN';
-export type AccountType = 'EMPLOYER' | 'JOB_SEEKER' | 'FRESHER';
+export type User = InferSelectModel<typeof users>;
+
+export enum Role {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+}
+export enum AccountType {
+  EMPLOYER = 'EMPLOYER',
+  JOB_SEEKER = 'JOB_SEEKER',
+  FRESHER = 'FRESHER',
+}

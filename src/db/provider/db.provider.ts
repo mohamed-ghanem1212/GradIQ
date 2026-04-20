@@ -17,7 +17,6 @@ export const dbProvider = [
       const pool = new Pool({
         connectionString,
       });
-
       return drizzle(pool, { schema }) as NodePgDatabase<typeof schema>;
     },
   },
