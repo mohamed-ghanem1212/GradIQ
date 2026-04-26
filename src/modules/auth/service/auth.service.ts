@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthenticatedUser } from '../interface/auth.interface';
 import { eq } from 'drizzle-orm';
 import { Profile } from 'passport-github2';
+import { User } from '@modules/users/interface/user.interface';
 export type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 @Injectable()
 export class AuthService {
@@ -77,10 +78,14 @@ export class AuthService {
     }
   }
 
-  async validateGithubUser(profile: Profile) {
+  async validateGithubUser(profile: Profile): Promise<User> {
     const email = profile.emails[0]?.value;
     if (!email) {
       throw new BadRequestException('GitHub profile does not contain an email');
     }
+    const existingUser = await this.db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+    return existingUser;
   }
 }

@@ -11,24 +11,7 @@ export class AuthDTOLogIn {
   password: string;
 }
 
-export class AuthDTOForgotPassword {
-  @ApiProperty()
-  @IsEmail()
-  email: string;
-
-  @ApiProperty()
-  @IsString()
-  newPassword: string;
-
-  @ApiProperty()
-  @IsString()
-  confirmPassword: string;
-}
 export class AuthDTOResetPassword {
-  @ApiProperty()
-  @IsEmail()
-  email: string;
-
   @ApiProperty()
   @IsEmail()
   oldPassword: string;
@@ -40,4 +23,9 @@ export class AuthDTOResetPassword {
   @ApiProperty()
   @IsString()
   confirmPassword: string;
+}
+
+export class OAuthProvider {
+  provider: string;
+  providerId: string;
 }
