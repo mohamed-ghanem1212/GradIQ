@@ -1,0 +1,3 @@
+The user will register either by github or google
+once we make sure the github or google account is verified we generete an access token if the user does exist in the user accounts DB that means he has already an account registered created with the user table (user account does not exist without the user table)
+if the account does not exist we generate a temp token for him and then he can register for the his personal information

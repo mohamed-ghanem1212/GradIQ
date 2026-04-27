@@ -1,0 +1,1 @@
+ALTER TABLE "user_accounts" ADD COLUMN "last_login_at" timestamp DEFAULT now() NOT NULL;

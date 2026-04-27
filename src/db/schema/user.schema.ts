@@ -5,6 +5,7 @@ import { createInsertSchema } from 'drizzle-zod';
 import { cv } from './cv.schema';
 import { ats } from './ats.schema';
 import { boolean } from 'drizzle-orm/pg-core';
+import { userAccounts } from './userProvider.schema';
 export const roleEnum = pgEnum('role_enum', ['USER', 'ADMIN']);
 export const accountTypeEnum = pgEnum('account_type_enum', [
   'EMPLOYER',
@@ -26,11 +27,10 @@ export const users = pgTable('users', {
   college: text('college').notNull(),
   phone: text('phone').notNull(),
   address: text('address').notNull(),
-  provider: text('provider').default('local').notNull(),
-  providerId: text('providerId'),
   isVerified: boolean('is_verified').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  lastLoginAt: timestamp('last_login_at').defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users);
@@ -38,4 +38,5 @@ export type InsertUser = InferInsertModel<typeof users>;
 export const usersRelations = relations(users, ({ many }) => ({
   cvs: many(cv),
   ats: many(ats),
+  accounts: many(userAccounts),
 }));
