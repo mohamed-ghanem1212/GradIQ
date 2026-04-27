@@ -17,7 +17,7 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   username: text('username').notNull(),
   email: text('email').unique().notNull(),
-  password: text('password').notNull(),
+  password: text('password'),
   pfp: text('pfp')
     .default('https://cdn-icons-png.flaticon.com/512/149/149071.png')
     .notNull(),

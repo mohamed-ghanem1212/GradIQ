@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { LoggerService } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import {
   Profile,
@@ -19,10 +19,8 @@ const githubOptions: StrategyOptionsWithRequest = {
 type VerifyCallback = (error: any, user?: any, info?: any) => void;
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly logger: LoggerService,
-  ) {
+  private readonly logger = new Logger(GithubStrategy.name);
+  constructor(private readonly authService: AuthService) {
     super(githubOptions);
   }
 
@@ -34,8 +32,10 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     done: VerifyCallback,
   ): Promise<any> {
     try {
+      const email = await this.getGithubEmail(accessToken);
+      if (!email) return done(null, false);
       console.log('GitHub Profile:', profile);
-      const user = await this.authService.validateGithubUser(profile);
+      const user = await this.authService.validateGithubUser(profile, email);
       console.log('User object from AuthService:', user);
       if (!user) {
         console.log('No user found');
@@ -49,5 +49,19 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       });
       throw new Error(err);
     }
+  }
+
+  private async getGithubEmail(accessToken: string): Promise<string | null> {
+    const response = await fetch('https://api.github.com/user/emails', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github+json',
+      },
+    });
+    if (!response) return null;
+    const emails: { email: string; primary: boolean; verified: boolean }[] =
+      await response.json();
+
+    return emails.find((e) => e.primary && e.verified)?.email ?? null;
   }
 }

@@ -57,6 +57,13 @@
       "when": 1777247810584,
       "tag": "0007_brief_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777304489199,
+      "tag": "0008_lovely_bloodaxe",
+      "breakpoints": true
     }
   ]
 }

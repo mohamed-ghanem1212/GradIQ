@@ -59,6 +59,30 @@ export class CreateUserDto {
   @IsString()
   address: string;
 }
+export class UserOauthDTO {
+  @ApiProperty({ enum: AccountType })
+  @IsEnum(AccountType)
+  accountType: AccountType;
+
+  @ApiProperty()
+  @IsString()
+  position: string;
+
+  @ApiProperty()
+  @IsString()
+  college: string;
+
+  @ApiProperty()
+  @IsString()
+  @Matches(/^\+?[0-9\s\-\(\)]{7,20}$/, {
+    message: 'Phone number is invalid',
+  })
+  phone: string;
+
+  @ApiProperty()
+  @IsString()
+  address: string;
+}
 export class UpdateUserDto {
   @ApiProperty()
   @IsString()

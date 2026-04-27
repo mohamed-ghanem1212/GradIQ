@@ -6,9 +6,12 @@ import { StringValue } from 'ms';
 import { AuthService } from '../service/auth.service';
 import { AuthController } from '../controller/auth.controller';
 import { DB_PROVIDER } from '../../../db/provider/db.provider';
+import { GithubStrategy } from '../../../common/strategy/github.strategy';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
+    PassportModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
@@ -21,7 +24,7 @@ import { DB_PROVIDER } from '../../../db/provider/db.provider';
     }),
   ],
 
-  providers: [AuthService],
+  providers: [AuthService, GithubStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

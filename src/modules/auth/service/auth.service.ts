@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { DB_PROVIDER } from '../../../db/provider/db.provider';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { CreateUserDto } from '../../users/dto/user.dto';
+import { CreateUserDto, UserOauthDTO } from '../../users/dto/user.dto';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { insertUserSchema, users } from '../../../db/schema/user.schema';
@@ -16,8 +16,7 @@ import { AuthenticatedUser } from '../interface/auth.interface';
 import { and, eq } from 'drizzle-orm';
 import { Profile } from 'passport-github2';
 import { userAccounts } from '@db/schema/userProvider.schema';
-import { User } from '@modules/users/interface/user.interface';
-import { jwt } from 'zod';
+
 export type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 type GithubCallbackResult =
   | { type: 'existing'; accessToken: string }
@@ -88,12 +87,15 @@ export class AuthService {
     }
   }
 
-  async validateGithubUser(profile: Profile): Promise<GithubCallbackResult> {
+  async validateGithubUser(
+    profile: Profile,
+    email: string,
+  ): Promise<GithubCallbackResult> {
     //Does this email exist in github??
-    const email = profile.emails[0]?.value;
-    if (!email) {
-      throw new BadRequestException('GitHub profile does not contain an email');
-    }
+    // const email = profile.emails?.[0]?.value;
+    // if (!email) {
+    //   throw new BadRequestException('GitHub profile does not contain an email');
+    // }
     //check if the user does exist in DB and if yes we generate an
     // access token and he's verified to use the platform
     const existingUser = await this.db.query.userAccounts.findFirst({
@@ -133,8 +135,7 @@ export class AuthService {
         sub: profile.id,
         email,
         username: profile.username,
-        fullName: profile.displayName,
-        avatarUrl: profile.photos?.[0]?.value,
+        pfp: profile.photos?.[0]?.value,
         provider: 'github',
         providerAccountId: profile.id,
         isTemp: true,
@@ -147,35 +148,36 @@ export class AuthService {
       tempToken,
     };
   }
-  // auth.service.ts
-  // // async completeRegistration(tempUser: any, dto: CompleteRegistrationDto) {
-  // //   return await this.db.transaction(async (tx) => {
-  // //     // Create users row with GitHub data + user filled data combined
-  // //     const [newUser] = await tx
-  // //       .insert(users)
-  // //       .values({
-  // //         email: tempUser.email,
-  // //         username: tempUser.username,
-  // //         fullName: tempUser.fullName,
-  // //         avatarUrl: tempUser.avatarUrl,
-  // //         phone: dto.phone,
-  // //         college: dto.college,
-  // //         lastLoginAt: new Date(),
-  // //         status: 'active',
-  // //       })
-  // //       .returning();
 
-  // //     // Create user_accounts row
-  // //     await tx.insert(userAccounts).values({
-  // //       userId: newUser.id,
-  // //       provider: tempUser.provider,
-  // //       providerAccountId: tempUser.providerAccountId,
-  // //     });
+  async completeRegistration(tempUser: any, dto: UserOauthDTO) {
+    return await this.db.transaction(async (tx) => {
+      // Create users row with GitHub data + user filled data combined
+      const [newUser] = await tx
+        .insert(users)
+        .values({
+          email: tempUser.email,
+          username: tempUser.username,
+          pfp: tempUser.pfp,
+          phone: dto.phone,
+          college: dto.college,
+          position: dto.position,
+          address: dto.address,
+          accountType: dto.accountType,
+          lastLoginAt: new Date(),
+        })
+        .returning();
 
-  // //     // Return real JWT now
-  // //     return {
-  // //       accessToken: this.jwtService.sign({ sub: newUser.id }),
-  // //     };
-  // //   });
-  // }
+      // Create user_accounts row
+      await tx.insert(userAccounts).values({
+        userId: newUser.id,
+        provider: tempUser.provider,
+        providerAccountId: tempUser.providerAccountId,
+      });
+
+      // Return real JWT now
+      return {
+        accessToken: this.jwtService.sign({ sub: newUser.id }),
+      };
+    });
+  }
 }

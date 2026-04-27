@@ -23,7 +23,6 @@ export const userAccounts = pgTable(
       length: 255,
     }).notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
-    lastLoginAt: timestamp('last_login_at').notNull().defaultNow(),
   },
   (table) => [unique().on(table.provider, table.providerAccountId)],
 );
