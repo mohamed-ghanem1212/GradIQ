@@ -58,7 +58,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
         Accept: 'application/vnd.github+json',
       },
     });
-    if (!response) return null;
+    if (!response.ok) return null;
     const emails: { email: string; primary: boolean; verified: boolean }[] =
       await response.json();
 

@@ -55,7 +55,7 @@ export class AuthService {
         college: user.college,
         phone: user.phone,
         address: user.address,
-        role: user.role,
+
         accountType: user.accountType,
       })
 
@@ -91,13 +91,6 @@ export class AuthService {
     profile: Profile,
     email: string,
   ): Promise<GithubCallbackResult> {
-    //Does this email exist in github??
-    // const email = profile.emails?.[0]?.value;
-    // if (!email) {
-    //   throw new BadRequestException('GitHub profile does not contain an email');
-    // }
-    //check if the user does exist in DB and if yes we generate an
-    // access token and he's verified to use the platform
     const existingUser = await this.db.query.userAccounts.findFirst({
       where: and(
         eq(userAccounts.provider, 'github'),
@@ -163,6 +156,7 @@ export class AuthService {
           position: dto.position,
           address: dto.address,
           accountType: dto.accountType,
+          isVerified: true,
           lastLoginAt: new Date(),
         })
         .returning();

@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { CreateUserDto, UserOauthDTO } from '@modules/users/dto/user.dto';
 import { AuthenticatedUser } from '../interface/auth.interface';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TempJwtGuard } from '../../../common/guards/tempJwt.guard';
 
@@ -31,7 +31,8 @@ export class AuthController {
   }
   // auth.controller.ts
   @Post('complete-registration')
-  @UseGuards(TempJwtGuard) // guard that validates the temp token
+  @UseGuards(TempJwtGuard)
+  @ApiBearerAuth() // guard that validates the temp token
   completeRegistration(@Req() req, @Body() dto: UserOauthDTO) {
     return this.authService.completeRegistration(req.user, dto);
   }
