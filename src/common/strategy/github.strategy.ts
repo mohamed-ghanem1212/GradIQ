@@ -35,7 +35,13 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       const email = await this.getGithubEmail(accessToken);
       if (!email) return done(null, false);
       console.log('GitHub Profile:', profile);
-      const user = await this.authService.validateGithubUser(profile, email);
+      const user = await this.authService.validateOAuthUser({
+        email,
+        pfp: profile.photos?.[0]?.value,
+        provider: 'github',
+        providerAccountId: profile.id,
+        username: profile.username,
+      });
       console.log('User object from AuthService:', user);
       if (!user) {
         console.log('No user found');

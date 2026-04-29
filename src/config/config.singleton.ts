@@ -24,4 +24,9 @@ export const config = {
     clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
     callbackurl: process.env.GITHUB_CALLBACK_URL as string,
   },
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID as string,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    callbackurl: process.env.GOOGLE_CALLBACK_URL as string,
+  },
 } as const;

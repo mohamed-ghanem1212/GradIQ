@@ -5,6 +5,9 @@ import { AuthenticatedUser } from '../interface/auth.interface';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TempJwtGuard } from '../../../common/guards/tempJwt.guard';
+import { GoogleOAuthGuard } from '../../../common/guards/google.guard';
+import { LocalAuthDTO } from '../dto/auth.dto';
+import type { User } from '@modules/users/interface/user.interface';
 
 // @ApiTags('Authentication')
 @Controller('auth')
@@ -29,11 +32,29 @@ export class AuthController {
   async registerOauth(@Req() req: any): Promise<any> {
     return req.user;
   }
-  // auth.controller.ts
+
   @Post('complete-registration')
   @UseGuards(TempJwtGuard)
   @ApiBearerAuth() // guard that validates the temp token
   completeRegistration(@Req() req, @Body() dto: UserOauthDTO) {
     return this.authService.completeRegistration(req.user, dto);
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {}
+
+  @Get('google-redirect')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req) {
+    return req.user;
+  }
+
+  @Post('signIn')
+  @UseGuards(AuthGuard('local'))
+  @ApiBody({ type: LocalAuthDTO })
+  async login(@Req() req: any) {
+    const { user, token } = await this.authService.logIn(req.user);
+    return { user, token };
   }
 }

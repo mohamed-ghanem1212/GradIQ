@@ -4,6 +4,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { DB_PROVIDER } from '../../../db/provider/db.provider';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -12,10 +13,11 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { insertUserSchema, users } from '../../../db/schema/user.schema';
 import { JwtService } from '@nestjs/jwt';
-import { AuthenticatedUser } from '../interface/auth.interface';
+import { AuthenticatedUser, OAuthProfile } from '../interface/auth.interface';
 import { and, eq } from 'drizzle-orm';
-import { Profile } from 'passport-github2';
 import { userAccounts } from '@db/schema/userProvider.schema';
+import { LocalAuthDTO } from '../dto/auth.dto';
+import { User } from '@modules/users/interface/user.interface';
 
 export type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 type GithubCallbackResult =
@@ -77,24 +79,55 @@ export class AuthService {
       token,
     };
   }
+  async validateLocalUser(auth: LocalAuthDTO) {
+    if (!auth) {
+      throw new BadRequestException('Please insert your data for verfication');
+    }
+    console.log(auth);
 
-  async extistEmail(email: string) {
     const findUser = await this.db.query.users.findFirst({
+      where: eq(users.email, auth.email),
+    });
+    console.log(findUser);
+    if (!findUser) {
+      throw new NotFoundException('Email not found');
+    }
+    const verifyPass = await bcrypt.compare(auth.password, findUser.password);
+    if (!verifyPass) {
+      throw new BadRequestException('email or password incorrect');
+    }
+    const { password: _, ...user } = findUser;
+    return user;
+  }
+  async extistEmail(email: string) {
+    const user = await this.db.query.users.findFirst({
       where: eq(users.email, email),
     });
-    if (findUser) {
-      return { exists: true };
+    console.log(user);
+
+    if (user) {
+      return { exists: true, user };
+    } else {
+      throw new NotFoundException('Email not found');
     }
   }
-
-  async validateGithubUser(
-    profile: Profile,
-    email: string,
-  ): Promise<GithubCallbackResult> {
+  async logIn(user: any) {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      username: user.username,
+      isVerified: user.isVerified,
+      lastLoginAt: user.lastLoginAt,
+      role: user.role,
+    };
+    const token = this.jwtService.sign({ payload });
+    return { user, token };
+  }
+  async validateOAuthUser(profile: OAuthProfile): Promise<any> {
     const existingUser = await this.db.query.userAccounts.findFirst({
       where: and(
-        eq(userAccounts.provider, 'github'),
-        eq(userAccounts.providerAccountId, profile.id),
+        eq(userAccounts.provider, profile.provider),
+        eq(userAccounts.providerAccountId, profile.providerAccountId),
       ),
       with: { user: true },
     });
@@ -114,9 +147,10 @@ export class AuthService {
     // in case the user wants to register for the first time
     // we check first on the email
     const emailExists = await this.db.query.users.findFirst({
-      where: eq(users.email, email),
+      where: eq(users.email, profile.email),
     });
 
+    console.log('hello');
     if (emailExists) {
       throw new ConflictException({
         code: 'EMAIL_ALREADY_EXISTS',
@@ -125,12 +159,12 @@ export class AuthService {
     }
     const tempToken = this.jwtService.sign(
       {
-        sub: profile.id,
-        email,
+        sub: profile.providerAccountId,
+        email: profile.email,
         username: profile.username,
-        pfp: profile.photos?.[0]?.value,
-        provider: 'github',
-        providerAccountId: profile.id,
+        pfp: profile.pfp,
+        provider: profile.provider,
+        providerAccountId: profile.providerAccountId,
         isTemp: true,
       },
       { expiresIn: '10m' },
@@ -167,10 +201,11 @@ export class AuthService {
         provider: tempUser.provider,
         providerAccountId: tempUser.providerAccountId,
       });
-
+      const { password: pwd, ...userData } = newUser;
       // Return real JWT now
       return {
         accessToken: this.jwtService.sign({ sub: newUser.id }),
+        userData,
       };
     });
   }

@@ -8,6 +8,8 @@ import { AuthController } from '../controller/auth.controller';
 import { DB_PROVIDER } from '../../../db/provider/db.provider';
 import { GithubStrategy } from '../../../common/strategy/github.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { GoogleStrategy } from '../../../common/strategy/google.strategy';
+import { LocalAuthStrategy } from '../../../common/strategy/local.strategy';
 
 @Module({
   imports: [
@@ -24,7 +26,7 @@ import { PassportModule } from '@nestjs/passport';
     }),
   ],
 
-  providers: [AuthService, GithubStrategy],
+  providers: [AuthService, GithubStrategy, GoogleStrategy, LocalAuthStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}
