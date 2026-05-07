@@ -4,6 +4,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { DB_PROVIDER } from '../../../db/provider/db.provider';
@@ -17,17 +18,13 @@ import { AuthenticatedUser, OAuthProfile } from '../interface/auth.interface';
 import { and, eq } from 'drizzle-orm';
 import { userAccounts } from '@db/schema/userProvider.schema';
 import { LocalAuthDTO } from '../dto/auth.dto';
-import { User } from '@modules/users/interface/user.interface';
 
-export type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
-type GithubCallbackResult =
-  | { type: 'existing'; accessToken: string }
-  | { type: 'new'; tempToken: string };
 @Injectable()
 export class AuthService {
+  private logger = new Logger(AuthService.name);
   constructor(
     @Inject(DB_PROVIDER) private db: NodePgDatabase<typeof schema>,
-    private readonly configService: ConfigService,
+
     private readonly jwtService: JwtService,
   ) {}
 
@@ -83,14 +80,19 @@ export class AuthService {
     if (!auth) {
       throw new BadRequestException('Please insert your data for verfication');
     }
-    console.log(auth);
+    this.logger.log('Validating local user with email: ' + auth.email);
 
     const findUser = await this.db.query.users.findFirst({
       where: eq(users.email, auth.email),
     });
-    console.log(findUser);
+    this.logger.log('Found user: ' + findUser);
     if (!findUser) {
       throw new NotFoundException('Email not found');
+    }
+    if (!findUser.password) {
+      throw new BadRequestException(
+        'This email is registered with OAuth. Please log in with your provider.',
+      );
     }
     const verifyPass = await bcrypt.compare(auth.password, findUser.password);
     if (!verifyPass) {
@@ -103,13 +105,7 @@ export class AuthService {
     const user = await this.db.query.users.findFirst({
       where: eq(users.email, email),
     });
-    console.log(user);
-
-    if (user) {
-      return { exists: true, user };
-    } else {
-      throw new NotFoundException('Email not found');
-    }
+    return user;
   }
   async logIn(user: any) {
     const payload = {
@@ -120,7 +116,7 @@ export class AuthService {
       lastLoginAt: user.lastLoginAt,
       role: user.role,
     };
-    const token = this.jwtService.sign({ payload });
+    const token = this.jwtService.sign(payload);
     return { user, token };
   }
   async validateOAuthUser(profile: OAuthProfile): Promise<any> {

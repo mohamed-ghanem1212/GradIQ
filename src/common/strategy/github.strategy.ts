@@ -34,7 +34,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     try {
       const email = await this.getGithubEmail(accessToken);
       if (!email) return done(null, false);
-      console.log('GitHub Profile:', profile);
+      this.logger.log('GitHub profile received: ' + JSON.stringify(profile));
       const user = await this.authService.validateOAuthUser({
         email,
         pfp: profile.photos?.[0]?.value,
@@ -42,12 +42,14 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
         providerAccountId: profile.id,
         username: profile.username,
       });
-      console.log('User object from AuthService:', user);
+      this.logger.log('User object from AuthService: ' + JSON.stringify(user));
       if (!user) {
-        console.log('No user found');
+        this.logger.log('No user found');
         return done(null, false);
       }
-      console.log('User object passed to done callback:', user);
+      this.logger.log(
+        'User object passed to done callback: ' + JSON.stringify(user),
+      );
       return done(null, user);
     } catch (err: any) {
       this.logger.error('Failed to validate github authentication', {
