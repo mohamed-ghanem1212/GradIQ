@@ -90,11 +90,12 @@ export class UpdateUserDto {
   username: string;
 
   @ApiProperty()
+  @IsEnum(['EMPLOYER', 'JOB_SEEKER', 'FRESHER'])
+  accountType: AccountType;
+
+  @ApiProperty()
   @IsEnum(['USER', 'ADMIN'])
   role: Role;
-  @ApiProperty()
-  @IsEnum(['EMPLOYER', 'JOB_SEEKER', 'FRESHER'])
-  accountType: Role;
 
   @ApiProperty()
   @IsString()

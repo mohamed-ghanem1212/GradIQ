@@ -8,6 +8,7 @@ import {
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../../db/schema';
 import { eq } from 'drizzle-orm';
+import { UpdateUserDto } from '../dto/user.dto';
 @Injectable()
 export class UsersService {
   constructor(
@@ -48,5 +49,25 @@ export class UsersService {
     }
 
     return user;
+  }
+  async updateUser(id: string, updateData: UpdateUserDto) {
+    if (!id) {
+      throw new BadRequestException('User ID is required');
+    }
+    const user = await this.db.query.users.findFirst({
+      where: eq(schema.users.id, id),
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const updatedUser = await this.db
+      .update(schema.users)
+      .set(updateData)
+      .where(eq(schema.users.id, id))
+      .returning();
+    if (updatedUser.length === 0) {
+      throw new NotFoundException('User not found');
+    }
+    return updatedUser[0];
   }
 }
