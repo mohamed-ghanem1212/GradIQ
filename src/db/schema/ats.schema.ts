@@ -4,6 +4,7 @@ import { cv } from './cv.schema';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { numeric } from 'drizzle-orm/pg-core';
+import { users } from './user.schema';
 
 export const ats = pgTable('ats', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -13,6 +14,9 @@ export const ats = pgTable('ats', {
   cv_id: uuid('cv_id')
     .notNull()
     .references(() => cv.id),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -21,6 +25,10 @@ export const atsRelations = relations(ats, ({ one }) => ({
   cv: one(cv, {
     references: [cv.id],
     fields: [ats.cv_id],
+  }),
+  user: one(users, {
+    references: [users.id],
+    fields: [ats.userId],
   }),
 }));
 

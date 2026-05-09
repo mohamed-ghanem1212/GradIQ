@@ -10,4 +10,5 @@ export const createAtsSchema = insertAtsSchema.extend({
     .min(10, 'Suggestions must be at least 10 characters long'),
   score: z.string().min(1, 'Score must be at least 1 character long'),
   cv_id: z.uuid('Invalid CV ID'),
+  user_id: z.uuid('Invalid User ID'),
 });

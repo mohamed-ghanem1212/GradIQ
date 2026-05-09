@@ -64,6 +64,20 @@
       "when": 1777304489199,
       "tag": "0008_lovely_bloodaxe",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778342479320,
+      "tag": "0009_public_vanisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778342805304,
+      "tag": "0010_lovely_malcolm_colcord",
+      "breakpoints": true
     }
   ]
 }

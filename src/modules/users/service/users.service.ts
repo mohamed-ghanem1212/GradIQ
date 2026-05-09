@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -11,6 +12,7 @@ import { eq } from 'drizzle-orm';
 import { UpdateUserDto } from '../dto/user.dto';
 @Injectable()
 export class UsersService {
+  private logger = new Logger(UsersService.name);
   constructor(
     @Inject(DB_PROVIDER) private readonly db: NodePgDatabase<typeof schema>,
   ) {}
@@ -31,6 +33,7 @@ export class UsersService {
   }
 
   async findUserById(id: string) {
+    this.logger.error(`Finding user with ID: ${id}`);
     if (!id) {
       throw new BadRequestException('User ID is required');
     }
@@ -54,12 +57,6 @@ export class UsersService {
     if (!id) {
       throw new BadRequestException('User ID is required');
     }
-    const user = await this.db.query.users.findFirst({
-      where: eq(schema.users.id, id),
-    });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
     const updatedUser = await this.db
       .update(schema.users)
       .set(updateData)
@@ -68,6 +65,17 @@ export class UsersService {
     if (updatedUser.length === 0) {
       throw new NotFoundException('User not found');
     }
-    return updatedUser[0];
+    const user = await this.db.query.users.findFirst({
+      where: eq(schema.users.id, id),
+      with: {
+        accounts: true,
+        cvs: true,
+        ats: true,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 }
