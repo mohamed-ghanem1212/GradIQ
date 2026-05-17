@@ -31,7 +31,10 @@ async function bootstrap() {
   SwaggerModule.setup('api-docs', app, documentFactory);
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
   );
   app.useGlobalFilters(new HttpExceptionFilter());
   await app.listen(process.env.PORT ?? 3000);

@@ -1,7 +1,13 @@
-import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Req } from '@nestjs/common';
 import { UsersService } from '../service/users.service';
-import { ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
 import { UpdateUserDto } from '../dto/user.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { UseGuards } from '@nestjs/common';
+import { Roles } from '../../../common/decorators/role.decorator';
+import { RolesGuard } from '../../../common/guards/role.guard';
+import { Role } from '../interface/user.interface';
+import { JwtGuard } from '../../../common/guards/jwt.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -25,5 +31,38 @@ export class UsersController {
     @Body() updateData: UpdateUserDto,
   ) {
     return await this.userService.updateUser(params.id, updateData);
+  }
+
+  @Get('getUserByToken')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async getUserByToken(@Req() req: any) {
+    console.log('Request user object:', req.user);
+    return await this.userService.getUserByToken(req);
+  }
+
+  @Patch('changeRole/:id')
+  @ApiParam({ name: 'id', description: 'User ID', type: String })
+  @ApiBody({
+    description: 'New role for the user',
+    schema: {
+      type: 'object',
+      properties: {
+        role: {
+          type: 'string',
+          enum: ['USER', 'ADMIN'],
+        },
+      },
+    },
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.ADMIN)
+  @UseGuards(JwtGuard, RolesGuard) // Ensure the user is authenticated
+  @ApiBearerAuth()
+  async changeRole(
+    @Param() params: { id: string },
+    @Body() body: { role: 'USER' | 'ADMIN' },
+  ) {
+    return await this.userService.changeRole(params.id, body.role);
   }
 }

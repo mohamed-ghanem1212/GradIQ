@@ -29,4 +29,9 @@ export const config = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     callbackurl: process.env.GOOGLE_CALLBACK_URL as string,
   },
+  cloudinary: {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
+    api_key: process.env.CLOUDINARY_API_KEY as string,
+    api_secret: process.env.CLOUDINARY_API_SECRET as string,
+  },
 } as const;

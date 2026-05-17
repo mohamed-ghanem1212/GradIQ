@@ -8,9 +8,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DB_PROVIDER } from '../../../db/provider/db.provider';
-import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { CreateUserDto, UserOauthDTO } from '../../users/dto/user.dto';
-import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { insertUserSchema, users } from '../../../db/schema/user.schema';
 import { JwtService } from '@nestjs/jwt';
@@ -137,7 +136,13 @@ export class AuthService {
         .where(eq(users.id, existingUser.user.id));
       return {
         type: 'existing',
-        accessToken: this.jwtService.sign({ sub: existingUser.user.id }),
+        accessToken: this.jwtService.sign({
+          id: existingUser.user.id,
+          email: existingUser.user.email,
+          username: existingUser.user.username,
+          role: existingUser.user.role,
+          isVerified: existingUser.user.isVerified,
+        }),
       };
     }
     // in case the user wants to register for the first time
@@ -200,7 +205,7 @@ export class AuthService {
       const { password: pwd, ...userData } = newUser;
       // Return real JWT now
       return {
-        accessToken: this.jwtService.sign({ sub: newUser.id }),
+        accessToken: this.jwtService.sign({ id: newUser.id }),
         userData,
       };
     });

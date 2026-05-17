@@ -89,11 +89,11 @@ export class UpdateUserDto {
   @MinLength(3)
   username: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: AccountType })
   @IsEnum(['EMPLOYER', 'JOB_SEEKER', 'FRESHER'])
   accountType: AccountType;
 
-  @ApiProperty()
+  @ApiProperty({ enum: Role })
   @IsEnum(['USER', 'ADMIN'])
   role: Role;
 

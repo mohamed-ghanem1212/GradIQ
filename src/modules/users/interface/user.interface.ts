@@ -12,3 +12,14 @@ export enum AccountType {
   JOB_SEEKER = 'JOB_SEEKER',
   FRESHER = 'FRESHER',
 }
+
+export interface UserRequest extends Request {
+  file: Express.Multer.File;
+  user: {
+    id: string;
+    email: string;
+    username: string;
+    role: Role;
+    isVerified: boolean;
+  };
+}

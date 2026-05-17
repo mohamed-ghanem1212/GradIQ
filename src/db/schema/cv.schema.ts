@@ -11,6 +11,7 @@ export const cv = pgTable('cv', {
   user_id: uuid('user_id')
     .notNull()
     .references(() => users.id),
+  file_path: text('file_path').notNull(),
   title: text('title').notNull(),
   summary: text('summary').notNull(),
   note: text('note').notNull(),

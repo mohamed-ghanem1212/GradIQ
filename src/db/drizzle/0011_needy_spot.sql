@@ -1,0 +1,1 @@
+ALTER TABLE "cv" ADD COLUMN "file_path" text NOT NULL;

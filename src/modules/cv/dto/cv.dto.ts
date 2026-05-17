@@ -3,16 +3,16 @@ import { IsEnum, IsString } from 'class-validator';
 import type { Format } from '../interface/cv.interface';
 
 export class CreateCvDto {
-  @ApiProperty()
+  @ApiProperty({ type: 'string' })
   @IsString()
   title: string;
-  @ApiProperty()
+  @ApiProperty({ type: 'string' })
   @IsString()
   summary: string;
-  @ApiProperty()
+  @ApiProperty({ type: 'string' })
   @IsString()
   note: string;
-  @ApiProperty()
+  @ApiProperty({ enum: ['PDF', 'DOCX'] })
   @IsEnum(['PDF', 'DOCX'])
   format: Format;
 }
