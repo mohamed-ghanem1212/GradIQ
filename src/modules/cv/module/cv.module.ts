@@ -6,18 +6,10 @@ import { UsersService } from '@modules/users/service/users.service';
 import { CloudinaryService } from '../../../config/cloudinary/service/cloudinary.service';
 import { CloudinaryModule } from '../../../config/cloudinary/module/cloudinary.module';
 import { BullModule } from '@nestjs/bullmq';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
-  imports: [
-    UsersModule,
-    CloudinaryModule,
-    BullModule.forRoot({
-      connection: {
-        host: 'localhost',
-        port: 6379,
-      },
-    }),
-  ],
+  imports: [UsersModule, CloudinaryModule],
   controllers: [CvController],
   providers: [CvService, UsersService, CloudinaryService],
 })

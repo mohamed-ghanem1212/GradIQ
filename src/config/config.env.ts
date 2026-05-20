@@ -22,4 +22,7 @@ export const envValidationSchema = Joi.object({
   CLOUDINARY_CLOUD_NAME: Joi.string().required(),
   CLOUDINARY_API_KEY: Joi.string().required(),
   CLOUDINARY_API_SECRET: Joi.string().required(),
+  REDIS_HOST_DEV: Joi.string().default('localhost'),
+  REDIS_HOST_PROD: Joi.string().default('redis'),
+  REDIS_PORT: Joi.number().default(6379),
 });

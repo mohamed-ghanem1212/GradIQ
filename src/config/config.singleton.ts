@@ -34,4 +34,8 @@ export const config = {
     api_key: process.env.CLOUDINARY_API_KEY as string,
     api_secret: process.env.CLOUDINARY_API_SECRET as string,
   },
+  redis: {
+    host: process.env.REDIS_HOST_DEV || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+  },
 } as const;
