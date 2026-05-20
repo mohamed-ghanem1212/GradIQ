@@ -1,4 +1,3 @@
-import { LocalAuthDTO } from '@modules/auth/dto/auth.dto';
 import { AuthService } from '@modules/auth/service/auth.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';

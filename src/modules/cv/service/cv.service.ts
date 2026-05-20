@@ -18,7 +18,7 @@ export class CvService {
     private readonly userService: UsersService,
     @Inject(DB_PROVIDER) private readonly db: NodePgDatabase<typeof schema>,
     private readonly cloudinaryService: CloudinaryService,
-    // @InjectQueue('cv-processing') private cvQueue: Queue,
+    @InjectQueue('cv-processing') private cvQueue: Queue,
   ) {}
   async uploadUserCv(CvData: CreateCvDto, req: UserRequest) {
     this.logger.log(
