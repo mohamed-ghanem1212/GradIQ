@@ -9,7 +9,13 @@ import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
-  imports: [UsersModule, CloudinaryModule],
+  imports: [
+    BullModule.registerQueue({
+      name: 'cv-processing',
+    }),
+    UsersModule,
+    CloudinaryModule,
+  ],
   controllers: [CvController],
   providers: [CvService, UsersService, CloudinaryService],
 })

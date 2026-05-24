@@ -1,16 +1,22 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { CreateCvDto } from '../dto/cv.dto';
 import { UsersService } from '@modules/users/service/users.service';
-import { AnyARecord } from 'node:dns';
 import { DB_PROVIDER } from '@db/provider/db.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../../db/schema';
 import { UserRequest } from '@modules/users/interface/user.interface';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import cloudinary from 'cloudinary';
-import { uploadFromBuffer } from '../../../utils/uploadFile';
 import { CloudinaryService } from '../../../config/cloudinary/service/cloudinary.service';
+import { downLoadFile } from '../pipeline/downloadFile.pipeline';
+import { analyzeFile } from '../pipeline/analyzeFile.pipeline';
+import { eq } from 'drizzle-orm';
 @Injectable()
 export class CvService {
   private logger = new Logger(CvService.name);
@@ -36,13 +42,15 @@ export class CvService {
 
     const uploadFile = await this.cloudinaryService.uploadFromBuffer(
       req.file.buffer,
-      `cv_uploads/${req.user.id}/${Date.now()}_${req.file.originalname}`,
+      `cv_uploads/`,
+      req.user.id,
+      req.file.originalname,
     );
     if (!uploadFile) {
       this.logger.error('Failed to upload CV to Cloudinary');
       throw new NotFoundException('Failed to upload CV');
     }
-    const newCv = await this.db
+    const cv = await this.db
       .insert(schema.cv)
       .values({
         user_id: req.user.id,
@@ -53,6 +61,37 @@ export class CvService {
         format: CvData.format,
       })
       .returning();
-    return newCv;
+    const job = await this.cvQueue.add(
+      'process-cv',
+      {
+        userId: req.user.id,
+        cvData: cv[0].id,
+        filename: req.file.originalname,
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 5000,
+        },
+
+        removeOnComplete: true,
+        removeOnFail: 100,
+      },
+    );
+    const waitingCount = await this.cvQueue.getWaitingCount();
+    if (waitingCount > 100) {
+      throw new ServiceUnavailableException('Server is busy, try again later');
+    }
+    return { cv: cv[0] };
+  }
+  async getCvById(cvId: string) {
+    const cv = await this.db.query.cv.findFirst({
+      where: eq(schema.cv.id, cvId),
+    });
+    if (!cv) {
+      throw new NotFoundException('CV not found');
+    }
+    return cv;
   }
 }

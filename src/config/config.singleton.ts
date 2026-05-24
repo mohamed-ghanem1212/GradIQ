@@ -36,6 +36,10 @@ export const config = {
   },
   redis: {
     host: process.env.REDIS_HOST_DEV || 'localhost',
+    hostPROD: process.env.REDIS_HOST_PROD || 'redis',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
+  },
+  groq: {
+    apiKey: process.env.GROQ_API_KEY as string,
   },
 } as const;

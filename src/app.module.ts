@@ -14,6 +14,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { StringValue } from 'ms';
 import { CvModule } from '@modules/cv/module/cv.module';
 import { BullModule } from '@nestjs/bullmq';
+import redisConfig from './config/config-register/redis.config';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { BullModule } from '@nestjs/bullmq';
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
       validationSchema: envValidationSchema,
-      load: [appConfig, jwtConfig, databaseConfig],
+      load: [appConfig, jwtConfig, databaseConfig, redisConfig],
     }),
 
     DbModule,
