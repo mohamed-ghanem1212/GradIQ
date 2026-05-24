@@ -68,7 +68,7 @@ export class CvController {
 
     return {
       message: 'CV uploaded',
-      filename: file.buffer.toString('base64'),
+
       cv,
     };
   }

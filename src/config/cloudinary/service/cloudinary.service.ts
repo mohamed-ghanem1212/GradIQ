@@ -10,20 +10,22 @@ export class CloudinaryService {
     cv_id: string,
     fileName: string,
   ) => {
-    return new Promise<{ secure_url: string }>((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder,
-          resource_type: 'raw',
-          public_id: `${cv_id}/${fileName}`,
-        },
-        (error, result) => {
-          if (error) return reject(error);
-          resolve(result as { secure_url: string });
-        },
-      );
-      stream.end(buffer);
-    });
+    return new Promise<{ secure_url: string; public_id: string }>(
+      (resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder,
+            resource_type: 'auto',
+            public_id: `${cv_id}/${fileName}`,
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result as { secure_url: string; public_id: string });
+          },
+        );
+        stream.end(buffer);
+      },
+    );
   };
 
   async deleteFile(publicId: string): Promise<void> {

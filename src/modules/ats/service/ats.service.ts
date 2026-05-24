@@ -7,55 +7,72 @@ import { CvService } from '@modules/cv/service/cv.service';
 import { downLoadFile } from '@modules/cv/pipeline/downloadFile.pipeline';
 import { analyzeFile } from '@modules/cv/pipeline/analyzeFile.pipeline';
 import { GroqService } from '../groq-ai/groq.service';
+import * as fs from 'fs';
+import { eq } from 'drizzle-orm';
+import { log } from 'console';
 @Injectable()
-@Processor('cv-processing')
 export class AtsService {
   private logger = new Logger(AtsService.name);
   constructor(
     @Inject(DB_PROVIDER) private db: NodePgDatabase<typeof schema>,
-    private readonly cvService: CvService,
+
     private readonly groqService: GroqService,
   ) {}
 
   async processCv(job: any) {
-    const { userId, cvId, filename } = job.data;
+    let tmpPath: string;
+    this.logger.log(
+      `Starting CV processing for job ${job.id} with data: ${JSON.stringify(job.data)}`,
+    );
+    const { userId, cvId, fileUrl } = job.data;
+    try {
+      // fetch cv directly from DB — no need for CvService
+      const [cv] = await this.db
+        .select()
+        .from(schema.cv)
+        .where(eq(schema.cv.id, cvId));
 
-    const cv = await this.cvService.getCvById(cvId);
-    this.logger.log(
-      `Processing CV ${cvId} for user ${userId} with filename ${filename}`,
-    );
-    const tempPath = await downLoadFile(cv.file_path);
-    if (!tempPath) {
-      this.logger.error(`Failed to download CV file from ${cv.file_path}`);
-      throw new Error('Failed to download CV file');
+      if (!cv) throw new Error(`CV ${cvId} not found`);
+
+      // download
+      tmpPath = await downLoadFile(fileUrl);
+      this.logger.log(`Downloaded CV file to ${tmpPath}`);
+
+      // extract text
+      const text = await analyzeFile(tmpPath);
+      this.logger.log(`Extracted text from CV file`);
+
+      // analyze with Groq
+      const analysis = await this.groqService.analyzeWithAI(text);
+      this.logger.log(`Groq analysis complete`);
+
+      // save all fields to DB
+      const [ats] = await this.db
+        .insert(schema.ats)
+        .values({
+          userId,
+          cv_id: cvId,
+          score: analysis.score.toString(),
+          suggestions: analysis.suggestions,
+          vulnerabilities: analysis.missingKeywords,
+        })
+        .returning();
+
+      return ats;
+    } finally {
+      if (tmpPath && fs.existsSync(tmpPath)) {
+        await fs.promises.unlink(tmpPath);
+      }
     }
-    this.logger.log(`Successfully downloaded CV file to ${tempPath}`);
-    const textResult = await analyzeFile(tempPath);
-    if (!textResult) {
-      this.logger.error(`Failed to analyze CV file at ${tempPath}`);
-      throw new Error('Failed to analyze CV file');
-    }
-    this.logger.log(
-      `Successfully analyzed CV file at ${tempPath} with result: ${JSON.stringify(textResult)}`,
-    );
-    const analysis = await this.groqService.analyzeWithAI(textResult);
-    if (!analysis) {
-      this.logger.error(`Failed to analyze CV with AI for file at ${tempPath}`);
-      throw new Error('Failed to analyze CV with AI');
-    }
-    this.logger.log(
-      `Successfully analyzed CV with AI for file at ${tempPath} with feedback: ${JSON.stringify(analysis)}`,
-    );
-    const ats = await this.db
-      .insert(schema.ats)
-      .values({
-        userId,
-        cv_id: cvId,
-        score: analysis.score,
-        suggestions: analysis.suggestions.join(', '),
-        vulnerabilities: analysis.weaknesses.join(', '),
-      })
-      .returning();
-    return ats[0];
+  }
+
+  // endpoint to fetch results
+  async getAtsByCvId(cvId: string) {
+    const [ats] = await this.db
+      .select()
+      .from(schema.ats)
+      .where(eq(schema.ats.cv_id, cvId));
+
+    return ats;
   }
 }

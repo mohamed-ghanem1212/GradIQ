@@ -50,6 +50,7 @@ export class CvService {
       this.logger.error('Failed to upload CV to Cloudinary');
       throw new NotFoundException('Failed to upload CV');
     }
+    const signedUrl = this.cloudinaryService.getSignedUrl(uploadFile.public_id);
     const cv = await this.db
       .insert(schema.cv)
       .values({
@@ -57,7 +58,7 @@ export class CvService {
         title: CvData.title,
         summary: CvData.summary,
         note: CvData.note,
-        file_path: uploadFile.secure_url,
+        file_path: signedUrl,
         format: CvData.format,
       })
       .returning();
@@ -65,8 +66,9 @@ export class CvService {
       'process-cv',
       {
         userId: req.user.id,
-        cvData: cv[0].id,
+        cvId: cv[0].id,
         filename: req.file.originalname,
+        fileUrl: signedUrl,
       },
       {
         attempts: 3,
@@ -83,7 +85,7 @@ export class CvService {
     if (waitingCount > 100) {
       throw new ServiceUnavailableException('Server is busy, try again later');
     }
-    return { cv: cv[0] };
+    return { cv: cv[0], jobId: job.data.userId };
   }
   async getCvById(cvId: string) {
     const cv = await this.db.query.cv.findFirst({
@@ -92,6 +94,6 @@ export class CvService {
     if (!cv) {
       throw new NotFoundException('CV not found');
     }
-    return cv;
+    return { cv };
   }
 }

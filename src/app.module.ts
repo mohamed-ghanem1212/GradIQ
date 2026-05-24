@@ -15,6 +15,7 @@ import { StringValue } from 'ms';
 import { CvModule } from '@modules/cv/module/cv.module';
 import { BullModule } from '@nestjs/bullmq';
 import redisConfig from './config/config-register/redis.config';
+import { AtsModule } from '@modules/ats/module/ats.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import redisConfig from './config/config-register/redis.config';
     AuthModule,
     UsersModule,
     CvModule,
+    AtsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

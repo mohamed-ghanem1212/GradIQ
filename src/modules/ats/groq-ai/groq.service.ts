@@ -11,7 +11,7 @@ export class GroqService {
     });
     this.logger.log('Sending CV to Groq AI for analysis');
     const response = await client.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         {
           role: 'system',
@@ -30,7 +30,10 @@ export class GroqService {
         },
       ],
     });
-    const raw = response.choices[0].message.content;
+    const raw = response.choices[0].message.content
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
     try {
       const feedback = JSON.parse(raw);
       return feedback;
