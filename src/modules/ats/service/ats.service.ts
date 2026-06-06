@@ -1,6 +1,11 @@
 import { DB_PROVIDER } from '@db/provider/db.provider';
 import { Processor } from '@nestjs/bullmq';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../../db/schema';
 import { config } from '../../../config/config.singleton';
@@ -59,7 +64,10 @@ export class AtsService {
           relevantKeywords: analysis.strengths,
         })
         .returning();
-      if (!ats) throw new Error('Failed to save ATS results to DB');
+      if (!ats)
+        throw new UnprocessableEntityException(
+          'Failed to save ATS results to DB',
+        );
 
       return ats;
     } finally {
@@ -100,7 +108,9 @@ export class AtsService {
         this.logger.error(
           `Failed to fetch jobs from Adzuna: ${fecthedJobs.statusText}`,
         );
-        throw new Error('Failed to fetch jobs from Adzuna');
+        throw new UnprocessableEntityException(
+          'Failed to fetch jobs from Adzuna',
+        );
       }
       const jobsData = await fecthedJobs.json();
       return { ats, jobsData };

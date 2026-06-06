@@ -14,6 +14,9 @@ import { JwtGuard } from '../../../common/guards/jwt.guard';
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
   @Get('allUsers')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
   async getAllUsers() {
     return this.userService.findAll();
   }
@@ -64,5 +67,26 @@ export class UsersController {
     @Body() body: { role: 'USER' | 'ADMIN' },
   ) {
     return await this.userService.changeRole(params.id, body.role);
+  }
+
+  @Get('fetchAllUsersProviders')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  async fetchAllUsersProviders() {
+    return await this.userService.fetchAllUsersProviders();
+  }
+
+  @Get('fetchAllUserProviders/:userId')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async fetchAllUserProviders(@Param('userId') userId: string) {
+    return await this.userService.fetchAllUserProviders(userId);
+  }
+  @Get('fetchUserProviderById/:providerId')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async fetchUserProviderById(@Param('providerId') providerId: string) {
+    return await this.userService.fetchUserProviderById(providerId);
   }
 }

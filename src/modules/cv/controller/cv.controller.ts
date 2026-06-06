@@ -24,9 +24,14 @@ import {
 } from '@nestjs/swagger';
 import { CreateCvDto } from '../dto/cv.dto';
 import { CvService } from '../service/cv.service';
-import type { UserRequest } from '@modules/users/interface/user.interface';
+import {
+  Role,
+  type UserRequest,
+} from '@modules/users/interface/user.interface';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { RolesGuard } from '../../../common/guards/role.guard';
+import { Roles } from '../../../common/decorators/role.decorator';
 @ApiTags('CV')
 @Controller('cv')
 export class CvController {
@@ -75,8 +80,10 @@ export class CvController {
       cv,
     };
   }
+
   @Get('all')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   async fetchAllCvs() {
     return await this.cvService.getAllCvs();

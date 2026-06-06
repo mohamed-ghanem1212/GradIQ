@@ -125,4 +125,30 @@ export class UsersService {
     }
     return user;
   }
+
+  async fetchAllUsersProviders() {
+    const users = await this.db.query.userAccounts.findMany();
+    if (users.length === 0) {
+      throw new NotFoundException('No user accounts found');
+    }
+    return users;
+  }
+  async fetchAllUserProviders(userId: string) {
+    const users = await this.db.query.userAccounts.findMany({
+      where: eq(schema.userAccounts.userId, userId),
+    });
+    if (users.length === 0) {
+      throw new NotFoundException('No user accounts found');
+    }
+    return users;
+  }
+  async fetchUserProviderById(providerId: string) {
+    const user = await this.db.query.userAccounts.findMany({
+      where: eq(schema.userAccounts.id, providerId),
+    });
+    if (user.length === 0) {
+      throw new NotFoundException('No user account found');
+    }
+    return user;
+  }
 }
