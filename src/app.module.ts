@@ -16,7 +16,7 @@ import { CvModule } from '@modules/cv/module/cv.module';
 import { BullModule } from '@nestjs/bullmq';
 import redisConfig from './config/config-register/redis.config';
 import { AtsModule } from '@modules/ats/module/ats.module';
-
+@Global()
 @Module({
   imports: [
     BullModule.forRootAsync({

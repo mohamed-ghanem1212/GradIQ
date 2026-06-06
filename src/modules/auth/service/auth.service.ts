@@ -17,13 +17,14 @@ import { AuthenticatedUser, OAuthProfile } from '../interface/auth.interface';
 import { and, eq } from 'drizzle-orm';
 import { userAccounts } from '@db/schema/userProvider.schema';
 import { LocalAuthDTO } from '../dto/auth.dto';
+import Redis from 'ioredis';
 
 @Injectable()
 export class AuthService {
   private logger = new Logger(AuthService.name);
   constructor(
     @Inject(DB_PROVIDER) private db: NodePgDatabase<typeof schema>,
-
+    private readonly redisClient: Redis,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -69,6 +70,12 @@ export class AuthService {
     };
 
     const token = await this.jwtService.signAsync(payload);
+    await this.redisClient.set(
+      `temp_token:${token}`,
+      JSON.stringify(payload),
+      'EX',
+      600,
+    ); // store temp token with 10 min expiration
     const { password: hashedPassword, ...userWithoutPassword } = newUser[0];
     return {
       user: userWithoutPassword,
@@ -115,8 +122,20 @@ export class AuthService {
       lastLoginAt: user.lastLoginAt,
       role: user.role,
     };
-    const token = this.jwtService.sign(payload);
-    return { user, token };
+    const accessToken = this.jwtService.sign(payload);
+    const jwtSetter = await this.redisClient.set(
+      `accessToken:${user.id}`,
+      this.jwtService.sign(payload),
+      'EX',
+      60 * 60 * 24,
+    ); // store access token in Redis with 24h expiration
+    if (jwtSetter !== 'OK') {
+      this.logger.error(
+        `Failed to set access token in Redis for user ${user.id}`,
+      );
+      throw new Error('Failed to create session, please try logging in again');
+    }
+    return { user, accessToken };
   }
   async validateOAuthUser(profile: OAuthProfile): Promise<any> {
     const existingUser = await this.db.query.userAccounts.findFirst({
@@ -134,15 +153,30 @@ export class AuthService {
           lastLoginAt: new Date(),
         })
         .where(eq(users.id, existingUser.user.id));
+      const accessToken = this.jwtService.sign({
+        id: existingUser.user.id,
+        email: existingUser.user.email,
+        username: existingUser.user.username,
+        role: existingUser.user.role,
+        isVerified: existingUser.user.isVerified,
+      });
+      const jwtSetter = await this.redisClient.set(
+        `accessToken:${existingUser.user.id}`,
+        accessToken,
+        'EX',
+        60 * 60 * 24,
+      );
+      if (jwtSetter !== 'OK') {
+        this.logger.error(
+          `Failed to set access token in Redis for user ${existingUser.user.id}`,
+        );
+        throw new Error(
+          'Failed to create session, please try logging in again',
+        );
+      }
       return {
-        type: 'existing',
-        accessToken: this.jwtService.sign({
-          id: existingUser.user.id,
-          email: existingUser.user.email,
-          username: existingUser.user.username,
-          role: existingUser.user.role,
-          isVerified: existingUser.user.isVerified,
-        }),
+        type: 'existing...',
+        accessToken,
       };
     }
     // in case the user wants to register for the first time
@@ -151,26 +185,28 @@ export class AuthService {
       where: eq(users.email, profile.email),
     });
 
-    console.log('hello');
     if (emailExists) {
       throw new ConflictException({
         code: 'EMAIL_ALREADY_EXISTS',
         message: 'This email is already registered with another provider.',
       });
     }
-    const tempToken = this.jwtService.sign(
-      {
-        sub: profile.providerAccountId,
-        email: profile.email,
-        username: profile.username,
-        pfp: profile.pfp,
-        provider: profile.provider,
-        providerAccountId: profile.providerAccountId,
-        isTemp: true,
-      },
-      { expiresIn: '10m' },
+    const payload = {
+      sub: profile.providerAccountId,
+      email: profile.email,
+      username: profile.username,
+      pfp: profile.pfp,
+      provider: profile.provider,
+      providerAccountId: profile.providerAccountId,
+      isTemp: true,
+    };
+    const tempToken = this.jwtService.sign(payload, { expiresIn: '10m' });
+    await this.redisClient.set(
+      `temp_token:${payload.sub}`,
+      JSON.stringify(payload),
+      'EX',
+      600,
     );
-
     return {
       type: 'new',
       tempToken,
@@ -203,11 +239,34 @@ export class AuthService {
         providerAccountId: tempUser.providerAccountId,
       });
       const { password: pwd, ...userData } = newUser;
-      // Return real JWT now
+      await this.redisClient.del(`temp_token:${tempUser.providerAccountId}`); // delete temp token after use
+      const accessToken = this.jwtService.sign({ id: newUser.id });
+      const redisSetter = await this.redisClient.set(
+        `accessToken:${newUser.id}`,
+        accessToken,
+        'EX',
+        60 * 60 * 24,
+      );
+      if (redisSetter !== 'OK') {
+        this.logger.error(
+          `Failed to set access token in Redis for user ${newUser.id}`,
+        );
+        throw new Error(
+          'Failed to create session, please try logging in again',
+        );
+      }
+      const getRedisToken = await this.redisClient.get(
+        `accessToken:${newUser.id}`,
+      );
+      this.logger.log(`Access token stored in Redis: ${getRedisToken}`);
       return {
-        accessToken: this.jwtService.sign({ id: newUser.id }),
+        accessToken,
         userData,
       };
     });
+  }
+
+  async logout(userId: string) {
+    await this.redisClient.del(`accessToken:${userId}`);
   }
 }

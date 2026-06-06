@@ -8,10 +8,13 @@ import { StringValue } from 'ms';
 import { JwtStrategy } from '../../../common/strategy/jwt.strategy';
 import { GitHubGuard } from '../../../common/guards/github.guard';
 import { JwtGuard } from '../../../common/guards/jwt.guard';
+import { RedisModule } from '@modules/redis/redis.module';
+import Redis from 'ioredis';
 
 @Module({
   imports: [
     PassportModule,
+    RedisModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
@@ -24,7 +27,7 @@ import { JwtGuard } from '../../../common/guards/jwt.guard';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, GitHubGuard, JwtGuard, JwtStrategy],
+  providers: [UsersService, GitHubGuard, JwtGuard, JwtStrategy, Redis],
   exports: [UsersModule],
 })
 export class UsersModule {}

@@ -10,6 +10,8 @@ import { GithubStrategy } from '../../../common/strategy/github.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from '../../../common/strategy/google.strategy';
 import { LocalAuthStrategy } from '../../../common/strategy/local.strategy';
+import { RedisModule } from '@modules/redis/redis.module';
+import Redis from 'ioredis';
 
 @Module({
   imports: [
@@ -24,9 +26,16 @@ import { LocalAuthStrategy } from '../../../common/strategy/local.strategy';
         },
       }),
     }),
+    RedisModule,
   ],
 
-  providers: [AuthService, GithubStrategy, GoogleStrategy, LocalAuthStrategy],
+  providers: [
+    AuthService,
+    GithubStrategy,
+    GoogleStrategy,
+    LocalAuthStrategy,
+    Redis,
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}
