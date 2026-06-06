@@ -22,7 +22,8 @@ export class GroqService {
             - weaknesses: string[]
             - suggestions: string[]
             - missingKeywords: string[]
-            Return JSON only, no extra text.`,
+            - vulnerabilities: string[]
+            Return JSON only, no extra text but at the same time these data feel free to talk don't be stingy make the applicant knows what he lacks and focus on the position and give him the keywords that will actually help him grow and be accurate at the score.`,
         },
         {
           role: 'user',

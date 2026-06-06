@@ -8,6 +8,8 @@ import { users } from './user.schema';
 
 export const ats = pgTable('ats', {
   id: uuid('id').primaryKey().defaultRandom(),
+  relevantKeywords: text('relevantKeywords').notNull(),
+  missingKeywords: text('missingKeywords').notNull(),
   vulnerabilities: text('vulnerabilities').notNull(),
   suggestions: text('suggestions').notNull(),
   score: numeric('score').notNull().default('0'),
@@ -17,6 +19,7 @@ export const ats = pgTable('ats', {
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

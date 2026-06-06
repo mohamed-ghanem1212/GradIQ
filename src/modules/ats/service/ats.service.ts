@@ -3,7 +3,7 @@ import { Processor } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../../../db/schema';
-import { CvService } from '@modules/cv/service/cv.service';
+import { config } from '../../../config/config.singleton';
 import { downLoadFile } from '@modules/cv/pipeline/downloadFile.pipeline';
 import { analyzeFile } from '@modules/cv/pipeline/analyzeFile.pipeline';
 import { GroqService } from '../groq-ai/groq.service';
@@ -54,9 +54,12 @@ export class AtsService {
           cv_id: cvId,
           score: analysis.score.toString(),
           suggestions: analysis.suggestions,
-          vulnerabilities: analysis.missingKeywords,
+          vulnerabilities: analysis.vulnerabilities,
+          missingKeywords: analysis.missingKeywords,
+          relevantKeywords: analysis.strengths,
         })
         .returning();
+      if (!ats) throw new Error('Failed to save ATS results to DB');
 
       return ats;
     } finally {
@@ -68,11 +71,40 @@ export class AtsService {
 
   // endpoint to fetch results
   async getAtsByCvId(cvId: string) {
-    const [ats] = await this.db
-      .select()
-      .from(schema.ats)
-      .where(eq(schema.ats.cv_id, cvId));
-
+    const ats = await this.db.query.ats.findFirst({
+      where: eq(schema.ats.cv_id, cvId),
+      with: {
+        cv: {
+          columns: {
+            id: true,
+            title: true,
+          },
+        },
+        user: {
+          columns: {
+            id: true,
+            username: true,
+            accountType: true,
+            role: true,
+            position: true,
+          },
+        },
+      },
+    });
+    if (parseFloat(ats.score) >= 90) {
+      this.logger.log(`CV ${cvId} scored ${ats.score} - excellent fit!`);
+      const fecthedJobs = await fetch(
+        `https://remotive.com/api/remote-jobs?category=software-dev&search=${ats.cv.title}&limit=5`,
+      );
+      if (!fecthedJobs.ok) {
+        this.logger.error(
+          `Failed to fetch jobs from Adzuna: ${fecthedJobs.statusText}`,
+        );
+        throw new Error('Failed to fetch jobs from Adzuna');
+      }
+      const jobsData = await fecthedJobs.json();
+      return { ats, jobsData };
+    }
     return ats;
   }
 }

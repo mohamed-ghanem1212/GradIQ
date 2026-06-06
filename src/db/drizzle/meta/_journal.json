@@ -85,6 +85,13 @@
       "when": 1778953236551,
       "tag": "0011_needy_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1779725496396,
+      "tag": "0012_complete_warbound",
+      "breakpoints": true
     }
   ]
 }

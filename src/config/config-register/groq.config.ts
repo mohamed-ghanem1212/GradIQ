@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
 
-export default registerAs('redis', () => ({
+export default registerAs('groq', () => ({
   groqApiKey: process.env.GROQ_API_KEY,
 }));
