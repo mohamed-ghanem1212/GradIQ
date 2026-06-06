@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   Logger,
@@ -16,7 +17,8 @@ import { Queue } from 'bullmq';
 import { CloudinaryService } from '../../../config/cloudinary/service/cloudinary.service';
 import { downLoadFile } from '../pipeline/downloadFile.pipeline';
 import { analyzeFile } from '../pipeline/analyzeFile.pipeline';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { BadRequestError } from 'groq-sdk';
 @Injectable()
 export class CvService {
   private logger = new Logger(CvService.name);
@@ -94,6 +96,38 @@ export class CvService {
     if (!cv) {
       throw new NotFoundException('CV not found');
     }
-    return { cv };
+    return cv;
+  }
+  async getAllCvsForUser(userId: string) {
+    if (userId === undefined || userId === null) {
+      throw new BadRequestException('User ID is required');
+    }
+    const cvs = await this.db.query.cv.findMany({
+      where: eq(schema.cv.user_id, userId),
+    });
+    if (cvs.length === 0) {
+      throw new NotFoundException('No CVs found for this user');
+    }
+    return cvs;
+  }
+  async getAllCvs() {
+    const cvs = await this.db.query.cv.findMany();
+    if (cvs.length === 0) {
+      throw new NotFoundException('No CVs found');
+    }
+    return cvs;
+  }
+  async deleteCv(cvId: string, userId: string) {
+    const cv = await this.db
+      .update(schema.cv)
+      .set({ isDeleted: true })
+      .where(and(eq(schema.cv.id, cvId), eq(schema.cv.user_id, userId)))
+      .returning();
+    if (!cv || cv.length === 0) {
+      throw new NotFoundException(
+        'CV not found or you do not have permission to delete this CV',
+      );
+    }
+    return { message: 'CV deleted successfully', cv: cv[0].isDeleted };
   }
 }

@@ -18,7 +18,7 @@ import { LocalAuthDTO } from '../dto/auth.dto';
 import type { User } from '@modules/users/interface/user.interface';
 import Redis from 'ioredis';
 
-// @ApiTags('Authentication')
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   private logger = new Logger(AuthController.name);
@@ -59,7 +59,7 @@ export class AuthController {
 
   @Get('google-redirect')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req) {
+  async googleAuthRedirect(@Req() req: any) {
     return req.user;
   }
 

@@ -4,6 +4,7 @@ import { pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { ats } from './ats.schema';
 import { createInsertSchema } from 'drizzle-zod';
+import { boolean } from 'drizzle-orm/pg-core';
 
 export const formatEnum = pgEnum('format_enum', ['PDF', 'DOCX']);
 export const cv = pgTable('cv', {
@@ -16,6 +17,7 @@ export const cv = pgTable('cv', {
   summary: text('summary').notNull(),
   note: text('note').notNull(),
   format: formatEnum('format').default('PDF').notNull(),
+  isDeleted: boolean('is_deleted').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

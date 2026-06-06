@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   FileTypeValidator,
+  Get,
   Logger,
   MaxFileSizeValidator,
+  Param,
   ParseFilePipe,
   Post,
   Req,
@@ -71,5 +74,29 @@ export class CvController {
 
       cv,
     };
+  }
+  @Get('all')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async fetchAllCvs() {
+    return await this.cvService.getAllCvs();
+  }
+  @Get(':cvId')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async getCvById(@Param('cvId') cvId: string) {
+    return await this.cvService.getCvById(cvId);
+  }
+  @Delete(':cvId')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async deleteCv(@Param('cvId') cvId: string, @Req() req: UserRequest) {
+    return await this.cvService.deleteCv(cvId, req.user.id);
+  }
+  @Get('user/:userId')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async getAllCvsForUser(@Param('userId') userId: string) {
+    return await this.cvService.getAllCvsForUser(userId);
   }
 }

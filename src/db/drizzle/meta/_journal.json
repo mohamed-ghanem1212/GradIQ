@@ -92,6 +92,13 @@
       "when": 1779725496396,
       "tag": "0012_complete_warbound",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1780767396439,
+      "tag": "0013_friendly_havok",
+      "breakpoints": true
     }
   ]
 }
