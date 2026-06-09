@@ -175,7 +175,7 @@ export class AuthService {
         );
       }
       return {
-        type: 'existing...',
+        type: 'exist',
         accessToken,
       };
     }
