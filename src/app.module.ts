@@ -16,9 +16,19 @@ import { CvModule } from '@modules/cv/module/cv.module';
 import { BullModule } from '@nestjs/bullmq';
 import redisConfig from './config/config-register/redis.config';
 import { AtsModule } from '@modules/ats/module/ats.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 @Global()
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 100,
+        },
+      ],
+    }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -43,6 +53,12 @@ import { AtsModule } from '@modules/ats/module/ats.module';
     AtsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

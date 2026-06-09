@@ -26,6 +26,4 @@ export const envValidationSchema = Joi.object({
   REDIS_HOST_PROD: Joi.string().default('redis'),
   REDIS_PORT: Joi.number().default(6379),
   GROQ_API_KEY: Joi.string().required(),
-  ADZUNA_APP_ID: Joi.string().required(),
-  ADZUNA_APP_KEY: Joi.string().required(),
 });

@@ -32,7 +32,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RolesGuard } from '../../../common/guards/role.guard';
 import { Roles } from '../../../common/decorators/role.decorator';
+import { ThrottlerGuard } from '@nestjs/throttler';
 @ApiTags('CV')
+@UseGuards(ThrottlerGuard)
 @Controller('cv')
 export class CvController {
   private logger = new Logger(CvController.name);

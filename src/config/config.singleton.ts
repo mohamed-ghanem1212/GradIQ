@@ -42,8 +42,4 @@ export const config = {
   groq: {
     apiKey: process.env.GROQ_API_KEY as string,
   },
-  adzuna: {
-    appId: process.env.ADZUNA_APP_ID as string,
-    appKey: process.env.ADZUNA_APP_KEY as string,
-  },
 } as const;
